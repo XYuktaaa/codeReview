@@ -1,67 +1,73 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { code, language, analysisType } = body;
+    const { code, language, analysisType } = await request.json();
 
-    // Validate required fields
     if (!code || !language || !analysisType) {
-      return NextResponse.json(
-        { error: 'Code, language, and analysisType are required' },
+      return Response.json(
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // Check for API key
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Gemini API key not configured' },
-        { status: 500 }
-      );
-    }
-
-    // Initialize Gemini AI - try gemini-2.0-flash for potentially different quota
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-    // Create prompts based on analysis type
-    let prompt = '';
+    // Build prompt based on analysis type
+    let systemPrompt = 'You are an expert code analyzer and assistant.';
+    let userPrompt = '';
+    
     switch (analysisType) {
       case 'analyze':
-        prompt = `Analyze this ${language} code and identify any errors, bugs, potential issues, or improvements. Be specific and detailed:\n\n${code}`;
+        userPrompt = `Analyze the following ${language} code for errors, potential bugs, and improvements:\n\n\`\`\`${language}\n${code}\n\`\`\`\n\nProvide a detailed analysis.`;
         break;
       case 'fix':
-        prompt = `Fix all errors and bugs in this ${language} code. Provide the complete corrected code with explanations of what was fixed:\n\n${code}`;
+        userPrompt = `Find and fix any errors or bugs in the following ${language} code:\n\n\`\`\`${language}\n${code}\n\`\`\`\n\nProvide the corrected code and explain what was fixed.`;
         break;
       case 'explain':
-        prompt = `Explain this ${language} code in simple terms. Break down what each part does and how it works:\n\n${code}`;
+        userPrompt = `Explain the following ${language} code in simple terms:\n\n\`\`\`${language}\n${code}\n\`\`\`\n\nBreak down what each part does.`;
         break;
       case 'optimize':
-        prompt = `Optimize this ${language} code for better performance, readability, and best practices. Provide the optimized version with explanations:\n\n${code}`;
+        userPrompt = `Optimize the following ${language} code for better performance and readability:\n\n\`\`\`${language}\n${code}\n\`\`\`\n\nProvide the optimized version and explain the improvements.`;
         break;
       default:
-        return NextResponse.json(
-          { error: 'Invalid analysis type' },
-          { status: 400 }
-        );
+        userPrompt = `Analyze the following ${language} code:\n\n\`\`\`${language}\n${code}\n\`\`\``;
     }
 
-    // Generate content
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    // Call Hugging Face Router API (OpenAI-compatible)
+    const hfResponse = await fetch(
+      'https://router.huggingface.co/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.HF_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'meta-llama/Llama-3.1-8B-Instruct',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          max_tokens: 1000,
+          temperature: 0.7,
+          top_p: 0.95,
+        }),
+      }
+    );
 
-    return NextResponse.json({ 
-      response: text,
-      prompt 
-    }, { status: 200 });
+    if (!hfResponse.ok) {
+      const errorData = await hfResponse.text();
+      throw new Error(`Hugging Face API error: ${errorData}`);
+    }
+
+    const result = await hfResponse.json();
+    const response = result.choices[0].message.content;
+
+    return Response.json({
+      response,
+      prompt: userPrompt,
+    });
   } catch (error: any) {
-    console.error('Gemini API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to analyze code: ' + error.message },
+    console.error('Hugging Face API Error:', error);
+    return Response.json(
+      { error: `Failed to analyze code: ${error.message}` },
       { status: 500 }
     );
   }

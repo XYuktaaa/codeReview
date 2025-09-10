@@ -148,4 +148,3 @@ export default function HistorySidebar({ onSelectSnippet, refreshTrigger }: Hist
     </div>
   );
 }
-

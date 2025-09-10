@@ -1,343 +1,194 @@
-'use client';
-
-import { useState } from 'react';
-import CodeEditor from '@/components/CodeEditor';
-import HistorySidebar from '@/components/HistorySidebar';
-import ThemeToggle from '@/components/ThemeToggle';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Sparkles, Bug, Lightbulb, Zap, BookOpen, Menu, X, AlertCircle, Loader2 } from 'lucide-react';
-import Link from 'next/link';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Sparkles, Code, Zap, Bug, Lightbulb, ArrowRight, Database, Globe, BookOpen } from 'lucide-react';
+import Navbar from '@/components/Navbar';
 
-interface Analysis {
-  id: number;
-  analysisType: string;
-  response: string;
-  createdAt: string;
-}
-
-interface Snippet {
-  id: number;
-  code: string;
-  language: string;
-  createdAt: string;
-  analyses: Analysis[];
-}
-
-export default function Home() {
-  const [code, setCode] = useState('// Write or paste your code here\nfunction example() {\n  console.log("Hello, World!");\n}\n');
-  const [language, setLanguage] = useState('javascript');
-  const [output, setOutput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [currentSnippetId, setCurrentSnippetId] = useState<number | null>(null);
-  const [analyses, setAnalyses] = useState<Analysis[]>([]);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [refreshHistory, setRefreshHistory] = useState(0);
-  const [error, setError] = useState('');
-
-  const languages = [
-    { value: 'javascript', label: 'JavaScript' },
-    { value: 'typescript', label: 'TypeScript' },
-    { value: 'python', label: 'Python' },
-    { value: 'java', label: 'Java' },
-    { value: 'cpp', label: 'C++' },
-    { value: 'csharp', label: 'C#' },
-    { value: 'go', label: 'Go' },
-    { value: 'rust', label: 'Rust' },
-    { value: 'php', label: 'PHP' },
-    { value: 'ruby', label: 'Ruby' },
-  ];
-
-  const handleAnalyze = async (type: 'analyze' | 'fix' | 'explain' | 'optimize') => {
-    if (!code.trim()) {
-      setError('Please enter some code first');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setOutput('');
-
-    try {
-      // First, save or update the snippet
-      let snippetId = currentSnippetId;
-      
-      if (!snippetId) {
-        const snippetResponse = await fetch('/api/snippets', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, language }),
-        });
-
-        if (!snippetResponse.ok) throw new Error('Failed to save snippet');
-        
-        const snippet = await snippetResponse.json();
-        snippetId = snippet.id;
-        setCurrentSnippetId(snippetId);
-      }
-
-      // Call Gemini API for analysis
-      const geminiResponse = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, language, analysisType: type }),
-      });
-
-      if (!geminiResponse.ok) {
-        const errorData = await geminiResponse.json();
-        throw new Error(errorData.error || 'Failed to analyze code');
-      }
-
-      const { response: aiResponse, prompt } = await geminiResponse.json();
-
-      // Save the analysis
-      const analysisResponse = await fetch('/api/analysis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          snippetId,
-          analysisType: type,
-          prompt,
-          response: aiResponse,
-        }),
-      });
-
-      if (!analysisResponse.ok) throw new Error('Failed to save analysis');
-
-      const newAnalysis = await analysisResponse.json();
-      
-      setOutput(aiResponse);
-      setAnalyses(prev => [newAnalysis, ...prev]);
-      setRefreshHistory(prev => prev + 1);
-    } catch (err: any) {
-      console.error('Error:', err);
-      setError(err.message || 'An error occurred while analyzing the code');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSelectSnippet = (snippet: Snippet) => {
-    setCode(snippet.code);
-    setLanguage(snippet.language);
-    setCurrentSnippetId(snippet.id);
-    setAnalyses(snippet.analyses);
-    setOutput(snippet.analyses[0]?.response || '');
-    setSidebarOpen(false);
-  };
-
-  const handleNewSnippet = () => {
-    setCode('// Write or paste your code here\n');
-    setCurrentSnippetId(null);
-    setAnalyses([]);
-    setOutput('');
-    setError('');
-  };
-
-  const getAnalysisTypeIcon = (type: string) => {
-    switch (type) {
-      case 'analyze': return <Sparkles className="w-4 h-4" />;
-      case 'fix': return <Bug className="w-4 h-4" />;
-      case 'explain': return <Lightbulb className="w-4 h-4" />;
-      case 'optimize': return <Zap className="w-4 h-4" />;
-      default: return null;
-    }
-  };
-
+export default function HomePage() {
   return (
-    <div className="h-screen flex flex-col bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </Button>
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <Sparkles className="w-5 h-5" />
-              AI Code Assistant
-            </h1>
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      
+      {/* Hero Section */}
+      <section className="container mx-auto px-4 py-20 md:py-32">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-muted/50 mb-6">
+            <Sparkles className="w-4 h-4" />
+            <span className="text-sm font-medium">Powered by Google Gemini AI</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Link href="/about">
-              <Button variant="ghost" size="sm">
-                <BookOpen className="w-4 h-4 mr-2" />
-                About
+          
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+            Your AI-Powered
+            <br />
+            <span className="text-muted-foreground">Code Assistant</span>
+          </h1>
+          
+          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Analyze, debug, optimize, and understand your code instantly with advanced AI. 
+            Write better code faster with intelligent suggestions and explanations.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/editor">
+              <Button size="lg" className="w-full sm:w-auto">
+                <Code className="w-4 h-4 mr-2" />
+                Open Editor
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
-            <ThemeToggle />
+            <Link href="/about">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                <BookOpen className="w-4 h-4 mr-2" />
+                Learn More
+              </Button>
+            </Link>
           </div>
         </div>
-      </header>
+      </section>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
-        <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block w-full lg:w-80 border-r bg-card absolute lg:relative z-10 h-full`}>
-          <HistorySidebar onSelectSnippet={handleSelectSnippet} refreshTrigger={refreshHistory} />
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col overflow-hidden">
-          {/* Controls */}
-          <div className="border-b bg-card p-4">
-            <div className="flex items-center gap-3 flex-wrap">
-              <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {languages.map(lang => (
-                    <SelectItem key={lang.value} value={lang.value}>
-                      {lang.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Separator orientation="vertical" className="h-6" />
-
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => handleAnalyze('analyze')}
-                disabled={loading}
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Analyze
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleAnalyze('fix')}
-                disabled={loading}
-              >
-                <Bug className="w-4 h-4 mr-2" />
-                Fix
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleAnalyze('explain')}
-                disabled={loading}
-              >
-                <Lightbulb className="w-4 h-4 mr-2" />
-                Explain
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleAnalyze('optimize')}
-                disabled={loading}
-              >
-                <Zap className="w-4 h-4 mr-2" />
-                Optimize
-              </Button>
-
-              <div className="flex-1" />
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleNewSnippet}
-              >
-                New
-              </Button>
-            </div>
+      {/* Features Section */}
+      <section className="container mx-auto px-4 py-20 border-t">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Intelligent Code Analysis
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Four powerful AI actions to help you write, understand, and improve your code
+            </p>
           </div>
 
-          {/* Error Alert */}
-          {error && (
-            <Alert variant="destructive" className="m-4 mb-0">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <Sparkles className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Analyze</h3>
+              <p className="text-sm text-muted-foreground">
+                Detect errors, bugs, and potential issues in your code with detailed analysis
+              </p>
+            </Card>
 
-          {/* Editor and Output */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
-            {/* Code Editor */}
-            <div className="border-r flex flex-col overflow-hidden">
-              <div className="p-3 border-b bg-muted/30">
-                <h3 className="text-sm font-medium">Code Editor</h3>
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-lg bg-destructive/10 flex items-center justify-center mb-4">
+                <Bug className="w-6 h-6 text-destructive" />
               </div>
-              <div className="flex-1 overflow-hidden">
-                <CodeEditor
-                  value={code}
-                  onChange={(value) => setCode(value || '')}
-                  language={language}
-                />
+              <h3 className="text-xl font-semibold mb-2">Fix</h3>
+              <p className="text-sm text-muted-foreground">
+                Get corrected code with explanations of what was fixed and why
+              </p>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center mb-4">
+                <Lightbulb className="w-6 h-6" />
               </div>
+              <h3 className="text-xl font-semibold mb-2">Explain</h3>
+              <p className="text-sm text-muted-foreground">
+                Understand complex code with simple, clear explanations of how it works
+              </p>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-lg bg-chart-1/10 flex items-center justify-center mb-4">
+                <Zap className="w-6 h-6 text-chart-1" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Optimize</h3>
+              <p className="text-sm text-muted-foreground">
+                Improve performance, readability, and follow best practices
+              </p>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Technology Stack Section */}
+      <section className="container mx-auto px-4 py-20 border-t">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Built with Modern Technology
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Full-stack application leveraging the latest tools and frameworks
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Code className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Monaco Editor</h3>
+              <p className="text-sm text-muted-foreground">
+                Professional code editor with syntax highlighting for 10+ languages
+              </p>
             </div>
 
-            {/* Output Panel */}
-            <div className="flex flex-col overflow-hidden">
-              <div className="p-3 border-b bg-muted/30 flex items-center justify-between">
-                <h3 className="text-sm font-medium">AI Response</h3>
-                {loading && (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                )}
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
+                <Database className="w-8 h-8" />
               </div>
-              <div className="flex-1 overflow-auto p-4">
-                {loading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">Analyzing your code...</p>
-                    </div>
-                  </div>
-                ) : output ? (
-                  <div className="space-y-4">
-                    <Card className="p-4">
-                      <pre className="whitespace-pre-wrap text-sm font-mono">{output}</pre>
-                    </Card>
+              <h3 className="text-xl font-semibold mb-2">Persistent Storage</h3>
+              <p className="text-sm text-muted-foreground">
+                Save your code history and analyses for future reference
+              </p>
+            </div>
 
-                    {analyses.length > 1 && (
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-medium">Previous Analyses</h4>
-                        {analyses.slice(1).map((analysis) => (
-                          <Card key={analysis.id} className="p-3 cursor-pointer hover:bg-accent/50" onClick={() => setOutput(analysis.response)}>
-                            <div className="flex items-center gap-2 mb-2">
-                              {getAnalysisTypeIcon(analysis.analysisType)}
-                              <Badge variant="outline" className="text-xs">
-                                {analysis.analysisType}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(analysis.createdAt).toLocaleString()}
-                              </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground line-clamp-2">{analysis.response}</p>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-center">
-                    <div>
-                      <Sparkles className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">
-                        Select an action to analyze your code
-                      </p>
-                    </div>
-                  </div>
-                )}
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center mx-auto mb-4">
+                <Globe className="w-8 h-8" />
               </div>
+              <h3 className="text-xl font-semibold mb-2">Cloud Deployed</h3>
+              <p className="text-sm text-muted-foreground">
+                Accessible anywhere with edge-optimized performance
+              </p>
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="container mx-auto px-4 py-20 border-t">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Ready to improve your code?
+          </h2>
+          <p className="text-lg text-muted-foreground mb-8">
+            Start analyzing your code with AI-powered insights in seconds
+          </p>
+          <Link href="/editor">
+            <Button size="lg">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Get Started
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t bg-muted/30">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5" />
+              <span className="font-semibold">AI Code Assistant</span>
+            </div>
+            <p className="text-sm text-muted-foreground text-center">
+              Built by Yukta as part of Full-Stack Web Development Course
+            </p>
+            <div className="flex gap-4">
+              <Link href="/editor">
+                <Button variant="ghost" size="sm">Editor</Button>
+              </Link>
+              <Link href="/about">
+                <Button variant="ghost" size="sm">About</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -1,29 +1,13 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { Sparkles, Code, Database, Zap, Globe, BookOpen, ArrowLeft, GitBranch, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import { Sparkles, Code, Database, Zap, Globe, BookOpen, GitBranch, ArrowRight } from 'lucide-react';
+import Navbar from '@/components/Navbar';
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Editor
-            </Button>
-          </Link>
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <Sparkles className="w-5 h-5" />
-            AI Code Assistant
-          </h1>
-          <div className="w-24" />
-        </div>
-      </header>
+      <Navbar />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-12 max-w-5xl">
