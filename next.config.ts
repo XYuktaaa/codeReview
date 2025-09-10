@@ -2,16 +2,6 @@ import type { NextConfig } from "next";
 import path from "node:path";
 
 const nextConfig: NextConfig = {
-    experimental: {
-    allowedDevOrigins: ["192.168.29.8"],
-     // allowedDevOrigins: ["*"],
-  },
-  // Disable Turbopack entirely
-  turbo: false,
-  experimental: {
-    turbo: false,
-  },
-
   images: {
     remotePatterns: [
       {
@@ -35,8 +25,11 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
 
- };
+  // 🚫 Disable Turbopack completely
+  experimental: {
+    turbo: false,
+  },
+};
 
-module.exports = nextConfig;
 export default nextConfig;
 
