@@ -3,8 +3,6 @@
 > A modern, full-stack web application featuring an interactive code editor with integrated AI-powered code analysis, debugging, optimization, and explanation capabilities using Hugging Face AI models.
 
 **Developer:** Yukta  
-**Course:** [Course Name] - Full-Stack Web Development  
-**Institution:** [University/Institute Name]  
 **Project Goal:** Learn full-stack development, AI integration, prompt engineering, UI/UX design, and deployment workflows through building a practical, real-world application
 
 ---
@@ -410,8 +408,8 @@ Before you begin, ensure you have:
 ### Step 1: Clone the Repository
 
 ```bash
-git clone <your-repository-url>
-cd ai-code-assistant
+git clone <https://github.com/XYuktaaa/codeReview>
+cd codeReview
 ```
 
 ### Step 2: Install Dependencies
@@ -684,7 +682,7 @@ Improvements:
 git init
 git add .
 git commit -m "Initial commit"
-git remote add origin <your-github-repo-url>
+git remote add origin <https://github.com/XYuktaaa/codeReview>
 git push -u origin main
 ```
 
