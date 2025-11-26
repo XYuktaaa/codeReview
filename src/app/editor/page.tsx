@@ -4,6 +4,7 @@ import { useState } from 'react';
 import CodeEditor from '@/components/CodeEditor';
 import HistorySidebar from '@/components/HistorySidebar';
 import Navbar from '@/components/Navbar';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -281,7 +282,7 @@ export default function EditorPage() {
                 ) : output ? (
                   <div className="space-y-4">
                     <Card className="p-4">
-                      <pre className="whitespace-pre-wrap text-sm font-mono">{output}</pre>
+                      <MarkdownRenderer content={output} />
                     </Card>
 
                     {analyses.length > 1 && (
