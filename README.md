@@ -6,6 +6,11 @@
 **Project Goal:** Learn full-stack development, AI integration, prompt engineering, UI/UX design, and deployment workflows through building a practical, real-world application
 
 ---
+## DEMO IMAGE
+![Notebook Work](./images/lsm_work.jpg)
+![Notebook Work](./images/lsm_work.jpg)
+![Notebook Work](./images/lsm_work.jpg)
+![Notebook Work](./images/lsm_work.jpg)
 
 ## 📋 Table of Contents
 
