@@ -7,10 +7,12 @@
 
 ---
 ## DEMO IMAGE
-![Notebook Work](./images/lsm_work.jpg)
-![Notebook Work](./images/lsm_work.jpg)
-![Notebook Work](./images/lsm_work.jpg)
-![Notebook Work](./images/lsm_work.jpg)
+![Notebook Work](./public/2025-11-25T18:46:34+05:30.png)
+![Notebook Work](./public/2025-11-26T00:46:27+05:30.png)
+![Notebook Work](./public/2025-11-26T00:46:36+05:30.png)
+![Notebook Work](./public/2025-11-26T00:46:49+05:30.png)
+![Notebook Work](./public/2025-11-26T00:47:09+05:30.png)
+![Note](./public/2025-11-26T00:48:36+05:30.png)
 
 ## 📋 Table of Contents
 
